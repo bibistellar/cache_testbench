@@ -29,7 +29,7 @@ module cache_test(
     wire [31:0] dcache_waddr_o;
     wire [31:0]dcache_raddr_o;
     wire dcache_rreq_o;
-    wire [3:0]dcache_wsel_o;
+    wire [3:0]dcache_sel_o;
     wire dcache_wreq_o;
 
     initial begin
@@ -57,7 +57,7 @@ module cache_test(
         .dcache_wdata_o(data_from_cpu),
         .dcache_wreq_o(dcache_wreq_o),
         .dcache_rreq_o(dcache_rreq_o),
-        .dcache_wsel_o(dcache_wsel_o)
+        .dcache_sel_o(dcache_sel_o)
     );
 endmodule
 
