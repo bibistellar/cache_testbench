@@ -24,10 +24,11 @@ module cache_test(
     );
     reg clk;
     reg rst;
-    wire [31:0] data;
+    wire [31:0] data_from_cpu;
+    wire [31:0] data_from_cache;
     wire [31:0] addr;
-    wire ram_re_o;
-    wire ram_sel_o;
+    wire dcache_rreq_o;
+    wire dcache_wsel_o;
 
     initial begin
         clk <= 1'b1;
@@ -48,9 +49,11 @@ module cache_test(
     CPU CPU0(
         .clk(clk),
         .rst(rst),
-        .ram_data_o(data),
-        .ram_waddr_o(addr),
-        .ram_re_o(ram_re_o),
-        .ram_sel_o(ram_sel_o)
+        .dcache_data_i(data_from_cache),
+        .dcache_wdata_o(data_from_cpu),
+        .dcache_waddr_o(addr),
+        .dcache_rreq_o(dcache_rreq_o),
+        .dcache_wsel_o(dcache_wsel_o)
     );
 endmodule
+
