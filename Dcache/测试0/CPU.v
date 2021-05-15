@@ -30,13 +30,13 @@ module CPU(
     output reg[31:0] rom_addr_o1,
     output reg[31:0] rom_addr_o2,
 
-    input wire[31:0] ram_data_i,
-    output reg[31:0] ram_raddr_o,
-    output reg[31:0] ram_waddr_o,
-    output reg[31:0] ram_data_o,
-    output reg ram_we_o,
-    output reg ram_re_o,
-    output reg[3:0] ram_sel_o
+    input wire[31:0] dcache_data_i,
+    output reg[31:0] dcache_raddr_o,
+    output reg[31:0] dcache_waddr_o,
+    output reg[31:0] dcache_wdata_o,
+    output reg dcache_wreq_o,
+    output reg dcache_rreq_o,
+    output reg[3:0] dcache_wsel_o
     );
 
     reg [31:0] count;//当前测试次数
@@ -68,34 +68,34 @@ module CPU(
         if(rst)begin
             rom_addr_o1 <= 32'b0;
             rom_addr_o2 <= 32'b0;
-            ram_raddr_o <= 32'b0;
-            ram_waddr_o <= 32'b0;
-            ram_data_o <= 32'b0;
-            ram_we_o <= 32'b0;
-            ram_re_o <= 32'b0;
-            ram_sel_o <= 32'b0;
+            dcache_raddr_o <= 32'b0;
+            dcache_waddr_o <= 32'b0;
+            dcache_wdata_o <= 32'b0;
+            dcache_wreq_o <= 32'b0;
+            dcache_rreq_o <= 32'b0;
+            dcache_wsel_o <= 32'b0;
             count <= 32'b0;
             state <= 1'b0;
         end
         else if(count!=count_end)begin
             //写入一个数据
             if(state == 3'b000)begin
-                ram_data_o <= data[count];
-                ram_waddr_o <= count;
-                ram_we_o <= 1'b1;
-                ram_sel_o <= 4'b1111;
+                dcache_wdata_o <= data[count];
+                dcache_waddr_o <= count;
+                dcache_wreq_o <= 1'b1;
+                dcache_wsel_o <= 4'b1111;
                 state <= state+1'b1;
             end
             //读出一个数据
             else if(state == 3'b001)begin
-                ram_raddr_o <= count;
-                ram_re_o <= 1'b1;
-                ram_sel_o <= 4'b1111;
+                dcache_raddr_o <= count;
+                dcache_rreq_o <= 1'b1;
+                dcache_wsel_o <= 4'b1111;
                 state <= state+1'b1;
             end
             //对比状态
             else if(state == 3'b010)begin
-                if(ram_data_i==data[count])begin
+                if(dcache_data_i==data[count])begin
                     $display("%d data succeeds.\n",$count);
                     state <= 3'b000;
                     count <= count+1'b1;
@@ -114,3 +114,4 @@ module CPU(
         end
     end
 endmodule
+
