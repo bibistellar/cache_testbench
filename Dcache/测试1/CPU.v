@@ -9,7 +9,7 @@
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description: 本测试模块用于测试Dcache的顺序写入命中和顺序写出命中功能。随机生成16组数据写入Dcache中，然后随机读取16次这些数据。
+// Description: 本测试模块用于测试Dcache的顺序写入命中和顺序写出命中功能。随机生成16组数据写入Dcache中，然后随机读取16次这些数据，只测试第0路的0~15存储单元。
 // 
 // Dependencies: 
 // 
@@ -36,13 +36,14 @@ module CPU(
     output reg[31:0] dcache_wdata_o,
     output reg dcache_wreq_o,
     output reg dcache_rreq_o,
-    output reg[3:0] dcache_wsel_o
+    output reg[3:0] dcache_sel_o
     );
 
     reg [31:0] count;//当前测试次数
     reg [31:0] count_end;//测试终止次数
     reg [2:0]state;//0为写状态，1为读状态
     reg [2:0]read_excute_state;//0为连续读取准备状态，1为连续读取状态
+    reg [7:0] index_random;//随机生成的index
 
     reg [31:0] data [15:0];//16个32位寄存器，用于存储数据
     initial begin
@@ -74,7 +75,7 @@ module CPU(
             dcache_wdata_o <= 32'b0;
             dcache_wreq_o <= 32'b0;
             dcache_rreq_o <= 32'b0;
-            dcache_wsel_o <= 32'b0;
+            dcache_sel_o <= 32'b0;
             count <= 32'b0;
             state <= 1'b0;
             read_excute_state <= 1'b0;
@@ -82,9 +83,9 @@ module CPU(
         else if(state == 3'b000 && count!=count_end)begin
             //写入数据
             dcache_wdata_o <= data[count];
-            dcache_waddr_o <= count;
+            dcache_waddr_o <= {20'b0,count[7:0],4'b0000};
             dcache_wreq_o <= 1'b1;
-            dcache_wsel_o <= 4'b1111;
+            dcache_sel_o <= 4'b1111;
             count <= count +1'b1;
         end
         //写入数据完成，计数器归零
@@ -93,21 +94,24 @@ module CPU(
             count <= 3'b000;
         end
         else if(state == 3'b001 && count != count_end)begin
+            index_random <= {$random}%16;
             //连续读取前的准备阶段，先发送第一个数据的地址和使能信号
             if(read_excute_state == 3'b000)begin
-                dcache_raddr_o <= {26'b0,{$random}%16};
+                dcache_raddr_o <= {20'b0,index_random,4'b0000};
                 read_excute_state <= 3'b001;
                 dcache_rreq_o <= 1'b1;
+                dcache_sel_o <= 4'b1111;
                 count <= count +1'b1;
             end
             //对比返回的数据，并发送下一个数据的地址
             else if(read_excute_state == 3'b001)begin
-                dcache_raddr_o <= {26'b0,{$random}%16};
+                dcache_raddr_o <= {20'b0,index_random,4'b0000};
                 read_excute_state <= 3'b001;
                 dcache_rreq_o <= 1'b1;
+                dcache_sel_o <= 4'b1111;
                 count <= count +1'b1;
 
-                if(data[dcache_raddr_o[3:0]]==dcache_data_i)begin
+                if(data[dcache_raddr_o[12:5]]==dcache_data_i)begin
                     $display("test%d succeeds!\n",count);
                 end
                 else begin
