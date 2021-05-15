@@ -9,7 +9,7 @@
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
-// Description: 本测试模块用于测试Dcache的顺序写入命中和顺序写出命中功能。随机生成16组数据，然后顺序写入Dcache中，写一个读一个。
+// Description: 本测试模块用于测试Dcache的顺序写入命中和顺序写出命中功能。随机生成16组数据写入Dcache中，然后随机读取16次这些数据。
 // 
 // Dependencies: 
 // 
@@ -42,7 +42,7 @@ module CPU(
     reg [31:0] count;//当前测试次数
     reg [31:0] count_end;//测试终止次数
     reg [2:0]state;//0为写状态，1为读状态
-    reg [2:0]read_excute_state;
+    reg [2:0]read_excute_state;//0为连续读取准备状态，1为连续读取状态
 
     reg [31:0] data [15:0];//16个32位寄存器，用于存储数据
     initial begin
@@ -87,17 +87,20 @@ module CPU(
             dcache_wsel_o <= 4'b1111;
             count <= count +1'b1;
         end
+        //写入数据完成，计数器归零
         else if(state == 3'b000 && count == count_end)begin
             state = 3'b001;
             count <= 3'b000;
         end
         else if(state == 3'b001 && count != count_end)begin
+            //连续读取前的准备阶段，先发送第一个数据的地址和使能信号
             if(read_excute_state == 3'b000)begin
                 dcache_raddr_o <= {26'b0,{$random}%16};
                 read_excute_state <= 3'b001;
                 dcache_rreq_o <= 1'b1;
                 count <= count +1'b1;
             end
+            //对比返回的数据，并发送下一个数据的地址
             else if(read_excute_state == 3'b001)begin
                 dcache_raddr_o <= {26'b0,{$random}%16};
                 read_excute_state <= 3'b001;
