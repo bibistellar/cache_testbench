@@ -5,7 +5,7 @@
 // 
 // Create Date: 2021/05/14 00:52:34
 // Design Name: 
-// Module Name: cache_test
+// Module Name: dcache_test1
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cache_test(
+module dcache_test1(
     );
     reg clk;
     reg rst;
