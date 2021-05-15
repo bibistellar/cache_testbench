@@ -78,7 +78,7 @@ module CPU(
             state <= 1'b0;
         end
         else if(count!=count_end)begin
-            //写入一个数据
+            //写入一个数据，每个数据的地址都是0路第count存储单元第0块
             if(state == 3'b000)begin
                 dcache_wdata_o <= data[count];
                 dcache_waddr_o <= {20'b0,count[7:0],4'b0000};
