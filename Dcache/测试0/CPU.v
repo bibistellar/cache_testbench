@@ -36,7 +36,7 @@ module CPU(
     output reg[31:0] dcache_wdata_o,
     output reg dcache_wreq_o,
     output reg dcache_rreq_o,
-    output reg[3:0] dcache_wsel_o
+    output reg[3:0] dcache_sel_o
     );
 
     reg [31:0] count;//当前测试次数
@@ -73,7 +73,7 @@ module CPU(
             dcache_wdata_o <= 32'b0;
             dcache_wreq_o <= 32'b0;
             dcache_rreq_o <= 32'b0;
-            dcache_wsel_o <= 32'b0;
+            dcache_sel_o <= 32'b0;
             count <= 32'b0;
             state <= 1'b0;
         end
@@ -83,14 +83,14 @@ module CPU(
                 dcache_wdata_o <= data[count];
                 dcache_waddr_o <= {20'b0,count[7:0],4'b0000};
                 dcache_wreq_o <= 1'b1;
-                dcache_wsel_o <= 4'b1111;
+                dcache_sel_o <= 4'b1111;
                 state <= state+1'b1;
             end
             //读出一个数据
             else if(state == 3'b001)begin
                 dcache_raddr_o <= {20'b0,count[7:0],4'b0000};
                 dcache_rreq_o <= 1'b1;
-                dcache_wsel_o <= 4'b1111;
+                dcache_sel_o <= 4'b1111;
                 state <= state+1'b1;
             end
             //对比状态
