@@ -26,9 +26,11 @@ module cache_test(
     reg rst;
     wire [31:0] data_from_cpu;
     wire [31:0] data_from_cache;
-    wire [31:0] addr;
+    wire [31:0] dcache_waddr_o;
+    wire [31:0]dcache_raddr_o;
     wire dcache_rreq_o;
-    wire dcache_wsel_o;
+    wire [3:0]dcache_wsel_o;
+    wire dcache_wreq_o;
 
     initial begin
         clk <= 1'b1;
@@ -40,18 +42,20 @@ module cache_test(
         #20 rst <= 1'b0;
     end
 
-    Dcache dcache0(
+    /*Dcache dcache0(
         .clk(clk),
         .rst(rst)
-    );
+    );*/
     
 
     CPU CPU0(
         .clk(clk),
         .rst(rst),
         .dcache_data_i(data_from_cache),
+        .dcache_raddr_o(dcache_raddr_o),
+        .dcache_waddr_o(dcache_waddr_o),
         .dcache_wdata_o(data_from_cpu),
-        .dcache_waddr_o(addr),
+        .dcache_wreq_o(dcache_wreq_o),
         .dcache_rreq_o(dcache_rreq_o),
         .dcache_wsel_o(dcache_wsel_o)
     );
