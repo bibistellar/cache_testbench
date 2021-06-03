@@ -27,8 +27,7 @@ module Dcache_test3(
     reg rst;
     wire [31:0] data_from_cpu;
     wire [31:0] data_from_cache;
-    wire [31:0] dcache_waddr_o;
-    wire [31:0]dcache_raddr_o;
+    wire [31:0] dcache_addr_o;
     wire dcache_rreq_o;
     wire [3:0]dcache_sel_o;
     wire dcache_wreq_o;
@@ -36,6 +35,8 @@ module Dcache_test3(
 
     wire [127:0] data_from_cpu0;
     wire [127:0] data_from_cpu1;
+    wire [127:0] data_from_axi;
+    wire [127:0] data_from_cache_to_axi;
 
     wire wr_req;
     wire [127:0]wr_data;
@@ -50,50 +51,43 @@ module Dcache_test3(
 
     initial begin
         clk = 1'b0;
-        #5 forever clk = ~clk;
+        forever #5 clk = ~clk;
     end
     initial begin
         rst = 1'b1;
         #20 rst = 1'b0;
     end
 
-    /*Cache cache0(
-        .clk(clk),
-        .rst(rst),
-        .valid(1'b1),
-        .index(dcache_raddr_o[31:12]),
-        .tag(dcache_raddr_o[11:4]),
-        .offset(dcache_raddr_o[3:0]),
-        .data_ok(data_ok),
-        .rdata(data_from_cache),
-
-        .rd_req(rd_req),
-        .rd_addr(rd_addr),
-        .ret_valid(ret_valid),
-        .ret_data(ret_data)
-    );*/
+DCache DCache_u(.clk(clk), .rst(rst), 
+                    .rvalid_i(dcache_rreq_o), .addr_i(dcache_addr_o), 
+                    .wvalid_i(dcache_wreq_o), .wsel_i(dcache_sel_o), .wdata_i(data_from_cpu), 
+                    .data_ok_o(data_ok_o), .rdata_o(data_from_cache), 
+                    .rd_req_o(rd_req), .rd_addr_o(rd_addr), 
+                    .ret_valid_i(ret_valid), .ret_data_i(ret_data), 
+                    .wr_req_o(wr_req), .wr_addr_o(wr_addr), .wr_data_o(wr_data), .wr_rdy_i(wr_rdy),
+                    .stall_o(stall));
     CPU3 CPU(
         .clk(clk),
         .rst(rst),
         .dcache_data_i(data_from_cache),
-        .dcache_raddr_o(dcache_raddr_o),
-        .dcache_waddr_o(dcache_waddr_o),
+        .dcache_addr_o(dcache_addr_o),
         .dcache_wdata_o(data_from_cpu),
         .dcache_wreq_o(dcache_wreq_o),
         .dcache_rreq_o(dcache_rreq_o),
         .dcache_sel_o(dcache_sel_o),
-        .stallreq_from_dcahce(data_ok),
+        .stallreq_from_dcahce(stall),
+        .data_ok(data_ok),
 
         .data_from_memory(ret_data),
-        .data_from_cpu0(data_from_cpu0),
-        .data_from_cpu1(data_from_cpu1)
+        .data_from_cpu_way0(data_from_cpu0),
+        .data_from_cpu_way1(data_from_cpu1)
     );
     AXI3 axi0(
         .clk(clk),
         .rst(rst),
         
         .wr_req(wr_req),
-        .wr_data(wr_data),
+        .wr_data(data_from_cache_to_axi),
         .wr_addr(wr_addr),
         .wr_rdy(wr_rdy),
 
@@ -105,6 +99,8 @@ module Dcache_test3(
         .ret_data(ret_data),
 
         .data_from_cpu0(data_from_cpu0),
-        .data_from_cpu1(data_from_cpu1)
+        .data_from_cpu1(data_from_cpu1),
+
+        .data_from_axi(data_from_axi)
     );
 endmodule

@@ -37,7 +37,8 @@ module AXI3(
     output reg [127:0] ret_data,
 
     input wire [127:0] data_from_cpu0,
-    input wire [127:0] data_from_cpu1
+    input wire [127:0] data_from_cpu1,
+    output wire [127:0] data_from_axi
     );
     reg [31:0] data [3:0];
     reg [3:0] state;
@@ -48,26 +49,33 @@ module AXI3(
         data[2] = {$random}%32'hffff_ffff;
         data[3] = {$random}%32'hffff_ffff;
     end
+    assign data_from_axi ={data[3],data[2],data[1],data[0]};
     always @(posedge clk) begin
         if(rst)begin
-            wr_rdy <= 1'b1;
+            wr_rdy <= 1'b0;
             ret_valid <= 1'b0;
             ret_data <= 'b0;
             state <= 1'b0;
             count <= 4'b0;
         end
         else begin
-            if(state == 4'b0000 && wr_req && wr_rdy)begin
-                if(data_from_cpu0 == wr_data || data_from_cpu1 == wr_data)begin
+            ret_valid <= 1'b0;
+            if(!wr_rdy && wr_req && state == 4'b0000)begin
+                wr_rdy <= 1'b1;
+            end
+            else if(state == 4'b0000 && wr_rdy)begin
+                if(data_from_cpu0 == wr_data || data_from_cpu1 == wr_data || wr_data == 128'b0)begin
                     $display("AXI gets the right data.\n");
                 end
                 else begin
                     $display("AXI gets the wrong data.\n");
+                    //$stop;
                 end
+                wr_rdy <= 1'b0;
                 rd_rdy <= 1'b1;
                 state <= 4'b0001;
             end
-            else if(state == 4'b0001 && rd_req && rd_rdy)begin
+            else if(state == 4'b0001 && rd_rdy)begin
                 case (count)
                     4'b0000:begin
                         ret_data[31:0] <= data[0];
@@ -95,7 +103,8 @@ module AXI3(
             end
             else if(state == 4'b0010)begin
                 ret_valid <= 1'b1;
-                state <= state +1'b1;
+                state <= 4'b0000;
+                rd_rdy <= 1'b0;
             end
         end
     end
